@@ -12,7 +12,7 @@
             "import": "./dist/vue-fast-marquee.js",
             "require": "./dist/Vue-fast-marquee.cjs"
         },
-        "./dist/style.css": "./dist/style.css"
+        "./style.css": "./dist/style.css"
     },
     "scripts": {
         "dev": "vite",
