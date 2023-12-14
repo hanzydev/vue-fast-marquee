@@ -23,6 +23,8 @@ The most common use case is to register the component globally.
 
 ```js
 // main.js or similar
+import "vue-fast-marquee/style.css"; // import the styles
+
 import { createApp } from 'vue';
 import Marquee from 'vue-fast-marquee';
 
