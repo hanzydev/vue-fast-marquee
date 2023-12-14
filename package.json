@@ -18,7 +18,7 @@
         "dev": "vite",
         "build": "vue-tsc && vite build",
         "preview": "vite preview",
-        "format": "prettier --write . --ignore-path .gitignore"
+        "format": "prettier --write ."
     },
     "repository": {
         "type": "git",
