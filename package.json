@@ -1,0 +1,54 @@
+{
+    "name": "vue-fast-marquee",
+    "version": "1.0.0",
+    "description": "A lightweight Vue 3 component that harnesses the power of CSS animations to create silky smooth marquees.",
+    "type": "module",
+    "main": "dist/Vue-fast-marquee.cjs",
+    "module": "dist/vue-fast-marquee.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/vue-fast-marquee.js",
+            "require": "./dist/Vue-fast-marquee.cjs"
+        },
+        "./dist/style.css": "./dist/style.css"
+    },
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc && vite build",
+        "preview": "vite preview",
+        "format": "prettier --write . --ignore-path .gitignore"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/hanzydev/vue-fast-marquee.git"
+    },
+    "keywords": [
+        "vue",
+        "vue3",
+        "marquee",
+        "fast-marquee",
+        "vue-fast-marquee"
+    ],
+    "author": "hanzydev",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/hanzydev/vue-fast-marquee/issues"
+    },
+    "homepage": "https://github.com/hanzydev/vue-fast-marquee#readme",
+    "devDependencies": {
+        "@types/node": "^20.10.4",
+        "@vitejs/plugin-vue": "^4.5.2",
+        "prettier": "^3.1.1",
+        "sass": "^1.69.5",
+        "typescript": "^5.2.2",
+        "vite": "^5.0.8",
+        "vite-plugin-dts": "^3.6.4",
+        "vue": "^3.3.11",
+        "vue-tsc": "^1.8.25"
+    },
+    "peerDependencies": {
+        "vue": ">=3.2.0"
+    }
+}
