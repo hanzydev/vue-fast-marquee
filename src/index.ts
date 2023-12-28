@@ -12,3 +12,4 @@ export default {
 } as Plugin;
 
 export { Marquee };
+export * from './types';
