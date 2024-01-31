@@ -178,7 +178,7 @@ onMounted(() => {
     height: 100%;
 
     @mixin gradient {
-        background: linear-gradient(to right, var(--gradient-color), transparent);
+        background: linear-gradient(to right, var(--gradient-color), rgb(255, 255, 255, 0.1));
     }
 
     &::before,
