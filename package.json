@@ -3,7 +3,7 @@
     "version": "1.0.6",
     "description": "A lightweight Vue 3 component that harnesses the power of CSS animations to create silky smooth marquees.",
     "type": "module",
-    "main": "dist/Vue-fast-marquee.cjs",
+    "main": "dist/vue-fast-marquee.cjs",
     "module": "dist/vue-fast-marquee.js",
     "types": "dist/index.d.ts",
     "exports": {
