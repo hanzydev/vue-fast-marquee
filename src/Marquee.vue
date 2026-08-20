@@ -1,10 +1,5 @@
 <template>
-    <div
-        ref="containerRef"
-        :class="['vfm-marquee-container', className]"
-        :style="containerStyle"
-        v-if="isMounted"
-    >
+    <div ref="containerRef" :class="['vfm-marquee-container', className]" :style="containerStyle" v-if="isMounted">
         <div :style="gradientStyle" class="vfm-overlay" v-if="gradient" />
         <div
             class="vfm-marquee"
@@ -15,11 +10,7 @@
             <div :style="parentStyle" class="vfm-parent" ref="marqueeRef">
                 <slot />
             </div>
-            <div
-                :style="parentStyle"
-                class="vfm-parent"
-                v-for="_ in multiplyChildren(multiplier - 1)"
-            >
+            <div :style="parentStyle" class="vfm-parent" v-for="_ in multiplyChildren(multiplier - 1)">
                 <slot />
             </div>
         </div>
@@ -149,20 +140,16 @@ const duration = computed(() => {
     if (autoFill) {
         return (marqueeWidth.value * multiplier.value) / speed;
     } else {
-        return marqueeWidth < containerWidth
-            ? containerWidth.value / speed
-            : marqueeWidth.value / speed;
+        return marqueeWidth < containerWidth ? containerWidth.value / speed : marqueeWidth.value / speed;
     }
 });
 
 const containerStyle = computed(() => ({
     ...style,
     '--pause-on-hover': !play || pauseOnHover ? 'paused' : 'running',
-    '--pause-on-click':
-        !play || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
+    '--pause-on-click': !play || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
     '--width': direction === 'up' || direction === 'down' ? `100vh` : '100%',
-    '--transform':
-        direction === 'up' ? 'rotate(-90deg)' : direction === 'down' ? 'rotate(90deg)' : 'none',
+    '--transform': direction === 'up' ? 'rotate(-90deg)' : direction === 'down' ? 'rotate(90deg)' : 'none',
 }));
 
 const gradientStyle = computed(() => ({
@@ -180,8 +167,7 @@ const marqueeStyle = computed(() => ({
 }));
 
 const parentStyle = computed(() => ({
-    '--transform':
-        direction === 'up' ? 'rotate(90deg)' : direction === 'down' ? 'rotate(-90deg)' : 'none',
+    '--transform': direction === 'up' ? 'rotate(90deg)' : direction === 'down' ? 'rotate(-90deg)' : 'none',
 }));
 
 const calculateWidth = () => {
@@ -198,8 +184,7 @@ const calculateWidth = () => {
         }
 
         if (autoFill && _containerWidth && _marqueeWidth) {
-            multiplier.value =
-                _marqueeWidth < _containerWidth ? Math.ceil(_containerWidth / _marqueeWidth) : 1;
+            multiplier.value = _marqueeWidth < _containerWidth ? Math.ceil(_containerWidth / _marqueeWidth) : 1;
         } else {
             multiplier.value = 1;
         }

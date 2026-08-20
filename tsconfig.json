@@ -13,6 +13,9 @@
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "preserve",
+        "paths": {
+            "@/*": ["./playground/*"]
+        },
 
         /* Linting */
         "strict": true,
@@ -25,7 +28,9 @@
         "src/**/*.tsx",
         "src/**/*.vue",
         "src/vue-shim.d.ts",
-        "src/vite-env.d.ts"
+        "src/vite-env.d.ts",
+        "playground/**/*.ts",
+        "playground/**/*.vue"
     ],
     "references": [{ "path": "./tsconfig.node.json" }]
 }
