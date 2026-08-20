@@ -91,8 +91,9 @@ export interface MarqueeProps {
      */
     gradientColor?: string;
     /**
-     * @description The color of the gradient in dark mode
+     * @description The color of the gradient in dark mode. Defaults to gradientColor if not specified
      * @type {string}
+     * @default gradientColor
      */
     gradientColorDark?: string;
     /**
