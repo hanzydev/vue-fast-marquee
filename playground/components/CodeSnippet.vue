@@ -45,22 +45,26 @@ const generatedCode = computed(() => {
     if (c.pauseOnHover) propsList.push('pause-on-hover');
     if (c.pauseOnClick) propsList.push('pause-on-click');
     if (c.autoFill) propsList.push('auto-fill');
+    if (c.draggable) propsList.push('draggable');
     if (c.gradient) {
         propsList.push('gradient');
         if (c.gradientColor !== 'white') propsList.push(`gradient-color="${c.gradientColor}"`);
+        if (c.gradientColorDark && c.gradientColorDark !== c.gradientColor) {
+            propsList.push(`gradient-color-dark="${c.gradientColorDark}"`);
+        }
         if (c.gradientWidth !== 200) propsList.push(`:gradient-width="${c.gradientWidth}"`);
     }
 
-    const propsStr = propsList.length ? `\n  ${propsList.join('\n  ')}\n` : ' ';
+    const propsStr = propsList.length ? `\n        ${propsList.join('\n        ')}\n    ` : '    ';
 
     return `<script setup lang="ts">
-import { Marquee } from 'vue-fast-marquee';
+    import { Marquee } from 'vue-fast-marquee';
 <\/script>
 
 <template>
-  <Marquee${propsStr}>
-    <div>Your Content</div>
-  </Marquee>
+    <Marquee${propsStr}>
+        <div>Your Content</div>
+    </Marquee>
 </template>`;
 });
 </script>

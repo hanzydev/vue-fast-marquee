@@ -1,5 +1,7 @@
 <template>
-    <div class="inline-flex items-center gap-4 px-4 py-3 bg-card border border-border rounded-lg mx-2 select-none">
+    <div
+        class="inline-flex items-center gap-4 px-4 py-3 bg-card border border-border rounded-lg mx-2 my-1 shrink-0 select-none shadow-xs"
+    >
         <div class="flex flex-col">
             <span class="text-sm font-semibold text-foreground tracking-wide">{{ item.symbol }}</span>
             <span class="text-xs text-muted-foreground">{{ item.name }}</span>

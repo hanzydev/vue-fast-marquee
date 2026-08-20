@@ -1,5 +1,7 @@
 <template>
-    <div class="inline-flex flex-col gap-2 w-72 p-4 bg-card border border-border rounded-lg mx-2 select-none">
+    <div
+        class="inline-flex flex-col gap-2 w-72 p-4 bg-card border border-border rounded-lg mx-2 my-1 shrink-0 select-none shadow-xs"
+    >
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm border border-border">
                 {{ item.avatar }}

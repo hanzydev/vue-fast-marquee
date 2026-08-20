@@ -1,21 +1,25 @@
 <template>
-    <div ref="containerRef" :class="['vfm-marquee-container', className]" :style="containerStyle" v-if="isMounted">
-        <div :style="gradientStyle" class="vfm-overlay" v-if="gradient" />
-        <div
-            class="vfm-marquee"
-            :style="marqueeStyle"
-            @animationiteration="emit('cycleComplete')"
-            @animationend="emit('finish')"
-        >
-            <div :style="parentStyle" class="vfm-parent" ref="marqueeRef">
+    <div
+        ref="containerRef"
+        :class="['vfm-marquee-container', { 'is-vertical': isVertical }]"
+        @pointerdown="handlePointerDown"
+        @pointermove="handlePointerMove"
+        @pointerup="handlePointerUp"
+        @pointercancel="handlePointerUp"
+    >
+        <div v-if="gradient" class="vfm-overlay" />
+
+        <div class="vfm-marquee" @animationiteration="emit('cycleComplete')" @animationend="emit('finish')">
+            <div class="vfm-track" ref="marqueeRef">
                 <slot />
             </div>
-            <div :style="parentStyle" class="vfm-parent" v-for="_ in multiplyChildren(multiplier - 1)">
+            <div v-for="i in Math.max(0, multiplier - 1)" class="vfm-track" :key="`track-a-${i}`">
                 <slot />
             </div>
         </div>
-        <div class="vfm-marquee" :style="marqueeStyle">
-            <div :style="parentStyle" class="vfm-parent" v-for="_ in multiplyChildren(multiplier)">
+
+        <div class="vfm-marquee" aria-hidden="true">
+            <div v-for="i in multiplier" class="vfm-track" :key="`track-b-${i}`">
                 <slot />
             </div>
         </div>
@@ -23,26 +27,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, type CSSProperties } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 
 export interface MarqueeProps {
-    /**
-     * @description Inline style for the container div
-     * @type {CSSProperties}
-     * @default {}
-     */
-    style?: CSSProperties;
-    /**
-     * @description Class name to style the container div
-     * @type {any}
-     * @default ""
-     */
-    class?: any;
-    /**
-     * @description Whether to automatically fill blank space in the marquee with copies of the children or not
-     * @type {boolean}
-     * @default false
-     */
     autoFill?: boolean;
     /**
      * @description Whether to play or pause the marquee
@@ -99,16 +86,25 @@ export interface MarqueeProps {
      */
     gradientColor?: string;
     /**
+     * @description The color of the gradient in dark mode
+     * @type {string}
+     */
+    gradientColorDark?: string;
+    /**
      * @description The width of the gradient on either side
-     * @type {number | string}
+     * @type {number}
      * @default 200
      */
-    gradientWidth?: number | string;
+    gradientWidth?: number;
+    /**
+     * @description Enable manual dragging to scrub through the marquee
+     * @type {boolean}
+     * @default false
+     */
+    draggable?: boolean;
 }
 
 const {
-    style = {},
-    class: className = '',
     autoFill = false,
     play = true,
     pauseOnHover = false,
@@ -119,12 +115,14 @@ const {
     loop = 0,
     gradient = false,
     gradientColor = 'white',
+    gradientColorDark,
     gradientWidth = 200,
+    draggable = false,
 } = defineProps<MarqueeProps>();
 
 const emit = defineEmits<{
-    (event: 'finish'): void;
-    (event: 'cycleComplete'): void;
+    finish: [];
+    cycleComplete: [];
 }>();
 
 const containerRef = ref<HTMLDivElement>();
@@ -133,174 +131,300 @@ const marqueeRef = ref<HTMLDivElement>();
 const containerWidth = ref(0);
 const marqueeWidth = ref(0);
 const multiplier = ref(1);
-const isMounted = ref(false);
-const resizeObserver = ref<ResizeObserver>();
+
+const isDragging = ref(false);
+
+let startPos = 0;
+let startAnimationTime = 0;
+let activeAnimations: Animation[] = [];
+
+const isVertical = computed(() => direction === 'up' || direction === 'down');
 
 const duration = computed(() => {
-    if (autoFill) {
-        return (marqueeWidth.value * multiplier.value) / speed;
-    } else {
-        return marqueeWidth < containerWidth ? containerWidth.value / speed : marqueeWidth.value / speed;
-    }
+    if (speed <= 0) return 0;
+    if (autoFill) return (marqueeWidth.value * multiplier.value) / speed;
+
+    return marqueeWidth.value < containerWidth.value ? containerWidth.value / speed : marqueeWidth.value / speed;
 });
 
-const containerStyle = computed(() => ({
-    ...style,
-    '--pause-on-hover': !play || pauseOnHover ? 'paused' : 'running',
-    '--pause-on-click': !play || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
-    '--width': direction === 'up' || direction === 'down' ? `100vh` : '100%',
-    '--transform': direction === 'up' ? 'rotate(-90deg)' : direction === 'down' ? 'rotate(90deg)' : 'none',
-}));
+const cssVars = computed(() => {
+    const ltrDirection = direction === 'left' || direction === 'up' ? 'normal' : 'reverse';
+    const rtlDirection = ltrDirection === 'normal' ? 'reverse' : 'normal';
 
-const gradientStyle = computed(() => ({
-    '--gradient-color': gradientColor,
-    '--gradient-width': typeof gradientWidth === 'number' ? `${gradientWidth}px` : gradientWidth,
-}));
+    return {
+        duration: `${duration.value}s`,
+        delay: `${delay}s`,
+        iteration: loop ? `${loop}` : 'infinite',
+        direction: ltrDirection,
+        directionRtl: rtlDirection,
+        playState: !play || isDragging.value ? 'paused' : 'running',
+        minSize: autoFill ? 'auto' : '100%',
+        pauseOnHover: !play || pauseOnHover ? 'paused' : 'running',
+        pauseOnClick: !play || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
+        flexDirection: isVertical.value ? 'column' : 'row',
+        maxHeight: isVertical.value ? '100%' : 'auto',
+        gradientWidth: `${gradientWidth}px`,
+        gradientColor,
+        gradientColorDark: gradientColorDark || gradientColor,
+        cursor: draggable ? (isDragging.value ? 'grabbing' : 'grab') : 'auto',
+        userSelect: draggable ? 'none' : 'auto',
+        touchAction: draggable ? (isVertical.value ? 'pan-x' : 'pan-y') : 'auto',
+    };
+});
 
-const marqueeStyle = computed(() => ({
-    '--play': play ? 'running' : 'paused',
-    '--direction': direction === 'left' ? 'normal' : 'reverse',
-    '--duration': `${duration.value}s`,
-    '--delay': `${delay}s`,
-    '--iteration-count': !!loop ? `${loop}` : 'infinite',
-    '--min-width': autoFill ? `auto` : '100%',
-}));
+const getMarqueeAnimations = (): Animation[] => {
+    if (!containerRef.value) return [];
 
-const parentStyle = computed(() => ({
-    '--transform': direction === 'up' ? 'rotate(90deg)' : direction === 'down' ? 'rotate(-90deg)' : 'none',
-}));
+    const elements = containerRef.value.querySelectorAll('.vfm-marquee');
+    const anims: Animation[] = [];
 
-const calculateWidth = () => {
+    elements.forEach((el) => {
+        el.getAnimations().forEach((a) => anims.push(a));
+    });
+
+    return anims;
+};
+
+const handlePointerDown = (e: PointerEvent) => {
+    if (!draggable) return;
+
+    isDragging.value = true;
+    startPos = isVertical.value ? e.clientY : e.clientX;
+
+    activeAnimations = getMarqueeAnimations();
+    if (activeAnimations.length > 0) {
+        const curr = activeAnimations[0].currentTime;
+        startAnimationTime = typeof curr === 'number' ? curr : 0;
+    }
+
+    const currentTarget = e.currentTarget as HTMLElement;
+    currentTarget?.setPointerCapture?.(e.pointerId);
+};
+
+const handlePointerMove = (e: PointerEvent) => {
+    if (!isDragging.value || !draggable || activeAnimations.length === 0) return;
+
+    const currentPos = isVertical.value ? e.clientY : e.clientX;
+    const deltaPx = currentPos - startPos;
+
+    const totalSize =
+        (autoFill
+            ? marqueeWidth.value * multiplier.value
+            : marqueeWidth.value < containerWidth.value
+              ? containerWidth.value
+              : marqueeWidth.value) || 1;
+
+    const durationMs = duration.value * 1000;
+    if (durationMs <= 0) return;
+
+    const isReverse = direction === 'right' || direction === 'down';
+    const shiftMs = (deltaPx / totalSize) * durationMs * (isReverse ? 1 : -1);
+
+    let newTime = (startAnimationTime + shiftMs) % durationMs;
+    if (newTime < 0) newTime += durationMs;
+
+    activeAnimations.forEach((a) => (a.currentTime = newTime));
+};
+
+const handlePointerUp = (e: PointerEvent) => {
+    if (!isDragging.value) return;
+    isDragging.value = false;
+    activeAnimations = [];
+
+    const currentTarget = e.currentTarget as HTMLElement;
+    currentTarget?.releasePointerCapture?.(e.pointerId);
+};
+
+const calculateSize = () => {
     if (marqueeRef.value && containerRef.value) {
         const containerRect = containerRef.value.getBoundingClientRect();
+        const _containerSize = isVertical.value ? containerRect.height : containerRect.width;
+
         const marqueeRect = marqueeRef.value.getBoundingClientRect();
+        const _marqueeSize = isVertical.value ? marqueeRect.height : marqueeRect.width;
 
-        let _containerWidth = containerRect.width;
-        let _marqueeWidth = marqueeRect.width;
-
-        if (direction === 'up' || direction === 'down') {
-            _containerWidth = containerRect.height;
-            _marqueeWidth = marqueeRect.height;
-        }
-
-        if (autoFill && _containerWidth && _marqueeWidth) {
-            multiplier.value = _marqueeWidth < _containerWidth ? Math.ceil(_containerWidth / _marqueeWidth) : 1;
+        if (autoFill && _containerSize && _marqueeSize) {
+            multiplier.value = _marqueeSize < _containerSize ? Math.ceil(_containerSize / _marqueeSize) : 1;
         } else {
             multiplier.value = 1;
         }
 
-        containerWidth.value = _containerWidth;
-        marqueeWidth.value = _marqueeWidth;
+        containerWidth.value = _containerSize;
+        marqueeWidth.value = _marqueeSize;
     }
 };
 
-const multiplyChildren = (multiplier: number) => [
-    ...Array(Number.isFinite(multiplier) && multiplier >= 0 ? multiplier : 0),
-];
+let resizeObserver: ResizeObserver | null = null;
 
-watch([() => autoFill, () => direction, isMounted, containerRef], () => {
-    if (isMounted.value) {
-        calculateWidth();
-
-        if (marqueeRef.value && containerRef.value) {
-            if (resizeObserver.value) {
-                resizeObserver.value.disconnect();
-            }
-
-            resizeObserver.value = new ResizeObserver(() => calculateWidth());
-            resizeObserver.value.observe(containerRef.value);
-            resizeObserver.value.observe(marqueeRef.value);
-        }
+const setupObserver = () => {
+    if (marqueeRef.value && containerRef.value) {
+        resizeObserver?.disconnect();
+        resizeObserver = new ResizeObserver(calculateSize);
+        resizeObserver.observe(containerRef.value);
+        resizeObserver.observe(marqueeRef.value);
     }
+};
+
+watch([() => autoFill, () => direction], () => nextTick(calculateSize));
+
+watch(
+    () => draggable,
+    (value) => {
+        if (!value && isDragging.value) {
+            isDragging.value = false;
+            activeAnimations = [];
+        }
+    },
+);
+
+onMounted(async () => {
+    await nextTick();
+    calculateSize();
+    setupObserver();
 });
 
-onMounted(() => {
-    isMounted.value = true;
+onUnmounted(() => {
+    resizeObserver?.disconnect();
+    resizeObserver = null;
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .vfm-marquee-container {
-    overflow-x: hidden;
+    overflow: hidden;
     display: flex;
-    flex-direction: row;
+    flex-direction: v-bind('cssVars.flexDirection');
     position: relative;
-    width: var(--width);
-    transform: var(--transform);
-
-    &:hover div {
-        animation-play-state: var(--pause-on-hover);
-    }
-
-    &:active div {
-        animation-play-state: var(--pause-on-click);
-    }
-}
-
-.vfm-overlay {
-    position: absolute;
     width: 100%;
-    height: 100%;
+    height: v-bind('cssVars.maxHeight');
+    cursor: v-bind('cssVars.cursor');
+    user-select: v-bind('cssVars.userSelect');
+    touch-action: v-bind('cssVars.touchAction');
 
-    @mixin gradient {
-        background: linear-gradient(to right, var(--gradient-color), rgb(255, 255, 255, 0));
+    &:hover .vfm-marquee {
+        animation-play-state: v-bind('cssVars.pauseOnHover');
     }
 
-    &::before,
-    &::after {
-        @include gradient;
-        content: '';
-        height: 100%;
-        position: absolute;
-        width: var(--gradient-width);
-        z-index: 2;
-        pointer-events: none;
-        touch-action: none;
+    &:active .vfm-marquee {
+        animation-play-state: v-bind('cssVars.pauseOnClick');
     }
 
-    &::after {
-        right: 0;
-        top: 0;
-        transform: rotateZ(180deg);
+    &:not(.is-vertical):dir(rtl),
+    :global([dir='rtl']) &:not(.is-vertical) {
+        .vfm-marquee {
+            animation-direction: v-bind('cssVars.directionRtl');
+        }
     }
 
-    &::before {
-        left: 0;
-        top: 0;
+    &.is-vertical {
+        .vfm-marquee {
+            animation-name: scroll-y;
+        }
+
+        .vfm-overlay {
+            &::before {
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: v-bind('cssVars.gradientWidth');
+                background: linear-gradient(to bottom, var(--vfm-active-gradient), transparent);
+            }
+
+            &::after {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: v-bind('cssVars.gradientWidth');
+                background: linear-gradient(to top, var(--vfm-active-gradient), transparent);
+            }
+        }
     }
 }
 
 .vfm-marquee {
     flex: 0 0 auto;
-    min-width: var(--min-width);
     z-index: 1;
     display: flex;
-    flex-direction: row;
+    flex-direction: v-bind('cssVars.flexDirection');
     align-items: center;
-    animation: scroll var(--duration) linear var(--delay) var(--iteration-count);
-    animation-play-state: var(--play);
-    animation-delay: var(--delay);
-    animation-direction: var(--direction);
+    min-width: v-bind('cssVars.minSize');
+    min-height: v-bind('cssVars.minSize');
 
-    @keyframes scroll {
-        0% {
-            transform: translateX(0%);
-        }
-        100% {
-            transform: translateX(-100%);
-        }
+    animation-name: scroll-x;
+    animation-duration: v-bind('cssVars.duration');
+    animation-timing-function: linear;
+    animation-delay: v-bind('cssVars.delay');
+    animation-iteration-count: v-bind('cssVars.iteration');
+    animation-direction: v-bind('cssVars.direction');
+    animation-play-state: v-bind('cssVars.playState');
+}
+
+@keyframes scroll-x {
+    0% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-100%);
     }
 }
 
-.vfm-parent {
+@keyframes scroll-y {
+    0% {
+        transform: translateY(0%);
+    }
+    100% {
+        transform: translateY(-100%);
+    }
+}
+
+.vfm-overlay {
+    --vfm-active-gradient: v-bind('cssVars.gradientColor');
+
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+
+    @media (prefers-color-scheme: dark) {
+        --vfm-active-gradient: v-bind('cssVars.gradientColorDark');
+    }
+
+    :global(.dark) & {
+        --vfm-active-gradient: v-bind('cssVars.gradientColorDark');
+    }
+
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        pointer-events: none;
+        touch-action: none;
+    }
+
+    &::before {
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: v-bind('cssVars.gradientWidth');
+        background: linear-gradient(to right, var(--vfm-active-gradient), transparent);
+    }
+
+    &::after {
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: v-bind('cssVars.gradientWidth');
+        background: linear-gradient(to left, var(--vfm-active-gradient), transparent);
+    }
+}
+
+.vfm-track {
     flex: 0 0 auto;
     display: flex;
-    min-width: auto;
-    flex-direction: row;
+    flex-direction: v-bind('cssVars.flexDirection');
     align-items: center;
-
-    & > * {
-        transform: var(--transform);
-    }
 }
 </style>

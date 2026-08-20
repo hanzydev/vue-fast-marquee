@@ -1,12 +1,11 @@
 <template>
     <Card class="border-border bg-card">
         <CardHeader class="flex-row items-center justify-between border-b border-border px-6 py-4 space-y-0">
-            <CardTitle class="text-base font-medium">Controls</CardTitle>
+            <CardTitle class="text-base font-semibold">Controls</CardTitle>
             <Button variant="outline" size="sm" @click="$emit('reset-defaults')"> Reset </Button>
         </CardHeader>
 
         <CardContent class="p-6 space-y-6">
-            <!-- Playback Switches -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="flex items-center justify-between space-x-2 rounded-lg border border-border p-3">
                     <Label for="play-switch" class="text-sm font-medium cursor-pointer">Play</Label>
@@ -27,11 +26,17 @@
                     <Label for="autofill-switch" class="text-sm font-medium cursor-pointer">Auto fill</Label>
                     <Switch id="autofill-switch" v-model="config.autoFill" />
                 </div>
+
+                <div
+                    class="flex items-center justify-between space-x-2 rounded-lg border border-border p-3 sm:col-span-2"
+                >
+                    <Label for="draggable-switch" class="text-sm font-medium cursor-pointer">Draggable</Label>
+                    <Switch id="draggable-switch" v-model="config.draggable" />
+                </div>
             </div>
 
             <Separator />
 
-            <!-- Direction (Simplified) -->
             <div class="space-y-2">
                 <Label class="text-sm font-medium text-muted-foreground">Direction</Label>
                 <Select v-model="config.direction">
@@ -41,17 +46,15 @@
                     <SelectContent>
                         <SelectItem value="left">Left (Default)</SelectItem>
                         <SelectItem value="right">Right</SelectItem>
-                        <SelectItem value="up">Up</SelectItem>
-                        <SelectItem value="down">Down</SelectItem>
+                        <SelectItem value="up">Up (Vertical)</SelectItem>
+                        <SelectItem value="down">Down (Vertical)</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
 
             <Separator />
 
-            <!-- Sliders: Speed, Delay, Loop -->
             <div class="space-y-4">
-                <!-- Speed -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-center text-sm">
                         <Label class="text-muted-foreground font-medium">Speed</Label>
@@ -60,13 +63,12 @@
                     <Slider
                         :model-value="[config.speed]"
                         :min="10"
-                        :max="250"
+                        :max="300"
                         :step="5"
                         @update:model-value="config.speed = $event?.[0] ?? config.speed"
                     />
                 </div>
 
-                <!-- Delay -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-center text-sm">
                         <Label class="text-muted-foreground font-medium">Delay</Label>
@@ -81,7 +83,6 @@
                     />
                 </div>
 
-                <!-- Loop -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-center text-sm">
                         <Label class="text-muted-foreground font-medium">Loop Count</Label>
@@ -101,14 +102,16 @@
 
             <Separator />
 
-            <!-- Gradient Mask -->
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <Label for="gradient-switch" class="text-sm font-medium cursor-pointer">Gradient Mask</Label>
+                    <div>
+                        <Label for="gradient-switch" class="text-sm font-medium cursor-pointer">Gradient Mask</Label>
+                        <p class="text-xs text-muted-foreground">Fades edges seamlessly</p>
+                    </div>
                     <Switch id="gradient-switch" v-model="config.gradient" />
                 </div>
 
-                <div v-if="config.gradient" class="space-y-3 pt-2">
+                <div v-if="config.gradient" class="space-y-4 pt-2">
                     <div class="space-y-2">
                         <div class="flex justify-between items-center text-sm">
                             <Label class="text-muted-foreground">Gradient Width</Label>
@@ -123,27 +126,33 @@
                         />
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <Label class="text-sm text-muted-foreground">Color:</Label>
-                        <div class="flex items-center gap-2">
-                            <button
-                                v-for="c in ['#18181b', '#09090b', '#0f172a', '#ffffff']"
-                                :key="c"
-                                type="button"
-                                class="w-5 h-5 rounded border transition-transform"
-                                :class="
-                                    config.gradientColor === c
-                                        ? 'ring-2 ring-primary ring-offset-1 scale-105'
-                                        : 'border-border opacity-70 hover:opacity-100'
-                                "
-                                :style="{ backgroundColor: c }"
-                                @click="config.gradientColor = c"
-                            />
-                            <input
-                                type="color"
-                                v-model="config.gradientColor"
-                                class="w-5 h-5 rounded border border-border cursor-pointer bg-transparent"
-                            />
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <Label class="text-sm text-muted-foreground">Gradient Color (Light):</Label>
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xs font-mono text-muted-foreground uppercase">{{
+                                    config.gradientColor
+                                }}</span>
+                                <input
+                                    type="color"
+                                    v-model="config.gradientColor"
+                                    class="w-7 h-7 rounded-md border border-border cursor-pointer bg-transparent p-0"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2">
+                            <Label class="text-sm text-muted-foreground">Gradient Color (Dark):</Label>
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-xs font-mono text-muted-foreground uppercase">{{
+                                    config.gradientColorDark
+                                }}</span>
+                                <input
+                                    type="color"
+                                    v-model="config.gradientColorDark"
+                                    class="w-7 h-7 rounded-md border border-border cursor-pointer bg-transparent p-0"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

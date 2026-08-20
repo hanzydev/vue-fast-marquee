@@ -5,11 +5,13 @@ export interface MarqueeConfig {
     pauseOnHover: boolean;
     pauseOnClick: boolean;
     autoFill: boolean;
+    draggable: boolean;
     direction: 'left' | 'right' | 'up' | 'down';
     speed: number;
     delay: number;
     loop: number;
     gradient: boolean;
     gradientColor: string;
+    gradientColorDark?: string;
     gradientWidth: number;
 }
