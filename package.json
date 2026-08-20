@@ -1,6 +1,6 @@
 {
     "name": "vue-fast-marquee",
-    "version": "1.0.6",
+    "version": "2.0.0",
     "description": "A lightweight Vue 3 component that harnesses the power of CSS animations to create silky smooth marquees.",
     "type": "module",
     "main": "dist/vue-fast-marquee.js",
@@ -19,6 +19,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc && vite build",
+        "build:playground": "vue-tsc && vite build --mode playground",
         "preview": "vite preview",
         "format": "prettier --write ."
     },

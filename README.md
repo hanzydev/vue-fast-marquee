@@ -1,8 +1,18 @@
 # Vue Fast Marquee
 
-A lightweight Vue 3 component that harnesses the power of CSS animations to create silky smooth marquees. (Inspired by [react-fast-marquee](https://npmjs.org/package/react-fast-marquee))
+A lightweight Vue 3 component that harnesses the power of CSS animations to create silky smooth marquees.
 
-![vue-fast-marquee](https://media.giphy.com/media/6ritiN2cpvpsyz4fo6/giphy.gif)
+[🎮 **Interactive Playground / Demo**](https://hanzydev.github.io/vue-fast-marquee/)
+
+> 📌 **Upgrading to v2.0.0**: Vertical marquees now use native CSS column layouts (no manual width/height swapping needed). This release also adds interactive drag scrubbing (`draggable`) and dark mode gradient support (`gradientColorDark`).
+
+
+## 🚀 What's New in v2.0.0
+
+- 🖱️ **Drag-to-Scrub**: Set `draggable` to allow users to drag or swipe to scrub through marquee content.
+- 🌙 **Dark Mode Gradient**: Added `gradientColorDark` for dark mode gradient masks (supports `.dark` class and `prefers-color-scheme`).
+- 📐 **Native Vertical Marquee**: Vertical directions (`up` / `down`) now render natively with CSS flex column layout and vertical gradients.
+- ⚡ **Smooth Playback**: Improved hover and click pause handling to work seamlessly alongside drag scrubbing.
 
 ## Installation
 
