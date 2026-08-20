@@ -30,6 +30,11 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 
 export interface MarqueeProps {
+    /**
+     * @description Whether to automatically fill blank space in the marquee with copies of the children or not
+     * @type {boolean}
+     * @default false
+     */
     autoFill?: boolean;
     /**
      * @description Whether to play or pause the marquee
@@ -92,10 +97,10 @@ export interface MarqueeProps {
     gradientColorDark?: string;
     /**
      * @description The width of the gradient on either side
-     * @type {number}
+     * @type {number | string}
      * @default 200
      */
-    gradientWidth?: number;
+    gradientWidth?: number | string;
     /**
      * @description Enable manual dragging to scrub through the marquee
      * @type {boolean}
@@ -163,7 +168,7 @@ const cssVars = computed(() => {
         pauseOnClick: !play || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
         flexDirection: isVertical.value ? 'column' : 'row',
         maxHeight: isVertical.value ? '100%' : 'auto',
-        gradientWidth: `${gradientWidth}px`,
+        gradientWidth: typeof gradientWidth === 'number' ? `${gradientWidth}px` : gradientWidth,
         gradientColor,
         gradientColorDark: gradientColorDark || gradientColor,
         cursor: draggable ? (isDragging.value ? 'grabbing' : 'grab') : 'auto',
