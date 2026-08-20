@@ -1,5 +1,5 @@
 import type { App, Plugin } from 'vue';
-import Marquee from './Marquee.vue';
+import Marquee, { type MarqueeProps } from './Marquee.vue';
 
 export interface PluginOptions {
     name?: string;
@@ -11,5 +11,4 @@ export default {
     },
 } as Plugin;
 
-export { Marquee };
-export * from './types';
+export { Marquee, type MarqueeProps };

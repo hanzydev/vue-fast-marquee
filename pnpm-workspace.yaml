@@ -1,0 +1,6 @@
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: set this to true or false
+minimumReleaseAgeExclude:
+  - sass@1.103.0
+  - vite@8.2.2
