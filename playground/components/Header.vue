@@ -3,7 +3,9 @@
         <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <span class="font-semibold text-sm tracking-tight text-foreground"> vue-fast-marquee </span>
-                <Badge variant="secondary"> v1.0.6 </Badge>
+                <Badge variant="secondary" class="font-mono text-xs">
+                    {{ version ? `v${version}` : '...' }}
+                </Badge>
                 <span class="text-sm text-muted-foreground hidden sm:inline-block"> Playground </span>
             </div>
 
@@ -33,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import { useDark, useToggle } from '@vueuse/core';
 import { Sun, Moon } from '@lucide/vue';
 import type { PresetType } from '../types';
@@ -50,4 +53,18 @@ defineEmits<{
 
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
+
+const version = ref<string>('');
+
+onMounted(async () => {
+    try {
+        const res = await fetch('https://registry.npmjs.org/vue-fast-marquee/latest');
+        if (res.ok) {
+            const data = await res.json();
+            if (data?.version) {
+                version.value = data.version;
+            }
+        }
+    } catch {}
+});
 </script>
