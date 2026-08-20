@@ -138,6 +138,15 @@ const containerWidth = ref(0);
 const marqueeWidth = ref(0);
 const multiplier = ref(1);
 
+const isPlayingState = ref(play);
+
+watch(
+    () => play,
+    (val) => {
+        isPlayingState.value = val;
+    },
+);
+
 const isDragging = ref(false);
 
 let startPos = 0;
@@ -156,6 +165,7 @@ const duration = computed(() => {
 const cssVars = computed(() => {
     const ltrDirection = direction === 'left' || direction === 'up' ? 'normal' : 'reverse';
     const rtlDirection = ltrDirection === 'normal' ? 'reverse' : 'normal';
+    const isPaused = !isPlayingState.value || isDragging.value;
 
     return {
         duration: `${duration.value}s`,
@@ -163,10 +173,10 @@ const cssVars = computed(() => {
         iteration: loop ? `${loop}` : 'infinite',
         direction: ltrDirection,
         directionRtl: rtlDirection,
-        playState: !play || isDragging.value ? 'paused' : 'running',
+        playState: isPaused ? 'paused' : 'running',
         minSize: autoFill ? 'auto' : '100%',
-        pauseOnHover: !play || pauseOnHover ? 'paused' : 'running',
-        pauseOnClick: !play || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
+        pauseOnHover: isPaused || pauseOnHover ? 'paused' : 'running',
+        pauseOnClick: isPaused || (pauseOnHover && !pauseOnClick) || pauseOnClick ? 'paused' : 'running',
         flexDirection: isVertical.value ? 'column' : 'row',
         maxHeight: isVertical.value ? '100%' : 'auto',
         gradientWidth: typeof gradientWidth === 'number' ? `${gradientWidth}px` : gradientWidth,
@@ -260,6 +270,35 @@ const calculateSize = () => {
     }
 };
 
+const playAnimation = () => {
+    isPlayingState.value = true;
+};
+
+const pauseAnimation = () => {
+    isPlayingState.value = false;
+};
+
+const toggleAnimation = () => {
+    isPlayingState.value = !isPlayingState.value;
+};
+
+const resetAnimation = () => {
+    const anims = getMarqueeAnimations();
+
+    anims.forEach((a) => (a.currentTime = 0));
+
+    isPlayingState.value = true;
+};
+
+defineExpose({
+    play: playAnimation,
+    pause: pauseAnimation,
+    toggle: toggleAnimation,
+    reset: resetAnimation,
+    isPlaying: computed(() => isPlayingState.value),
+    isPaused: computed(() => !isPlayingState.value),
+});
+
 let resizeObserver: ResizeObserver | null = null;
 
 const setupObserver = () => {
@@ -303,6 +342,7 @@ onUnmounted(() => {
     position: relative;
     width: 100%;
     height: v-bind('cssVars.maxHeight');
+
     cursor: v-bind('cssVars.cursor');
     user-select: v-bind('cssVars.userSelect');
     touch-action: v-bind('cssVars.touchAction');
@@ -394,14 +434,6 @@ onUnmounted(() => {
     pointer-events: none;
     z-index: 2;
 
-    @media (prefers-color-scheme: dark) {
-        --vfm-active-gradient: v-bind('cssVars.gradientColorDark');
-    }
-
-    :global(.dark) & {
-        --vfm-active-gradient: v-bind('cssVars.gradientColorDark');
-    }
-
     &::before,
     &::after {
         content: '';
@@ -425,6 +457,10 @@ onUnmounted(() => {
         width: v-bind('cssVars.gradientWidth');
         background: linear-gradient(to left, var(--vfm-active-gradient), transparent);
     }
+}
+
+:global(.dark .vfm-overlay) {
+    --vfm-active-gradient: v-bind('cssVars.gradientColorDark');
 }
 
 .vfm-track {
