@@ -14,7 +14,7 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/vue-fast-marquee.js"
         },
-        "./style.css": "./dist/style.css"
+        "./style.css": "./dist/vue-fast-marquee.css"
     },
     "scripts": {
         "dev": "vite",
